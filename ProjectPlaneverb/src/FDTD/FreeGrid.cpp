@@ -1,5 +1,6 @@
 #include <FDTD\FreeGrid.h>
 #include <PvDefinitions.h>
+#include <cmath>
 
 namespace Planeverb
 { 

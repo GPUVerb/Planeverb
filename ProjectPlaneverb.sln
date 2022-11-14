@@ -1,13 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.852
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32802.440
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProjectPlaneverb", "ProjectPlaneverb\ProjectPlaneverb.vcxproj", "{A05C074B-4727-4812-8A55-E20F9F8DE4B0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlaneverbSandbox", "PlaneverbSandbox\PlaneverbSandbox.vcxproj", "{149A3C02-804A-47EC-B7ED-C77DBACEF518}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlaneverbDSP", "PlaneverbDSP\PlaneverbDSP.vcxproj", "{FA8105AA-6D51-46C5-8D52-980CEFE33583}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProjectPlaneverbUnityPlugin", "ProjectPlaneverb\ProjectPlaneverbUnityPlugin.vcxproj", "{0966E4B1-A9C1-44FA-9ADD-1368743CD976}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlaneverbDSPUnityPlugin", "PlaneverbDSP\PlaneverbDSPUnityPlugin.vcxproj", "{6A924B32-AEB8-4B76-B696-0055428D812D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +45,22 @@ Global
 		{FA8105AA-6D51-46C5-8D52-980CEFE33583}.Release|x64.Build.0 = Release|x64
 		{FA8105AA-6D51-46C5-8D52-980CEFE33583}.Release|x86.ActiveCfg = Release|Win32
 		{FA8105AA-6D51-46C5-8D52-980CEFE33583}.Release|x86.Build.0 = Release|Win32
+		{0966E4B1-A9C1-44FA-9ADD-1368743CD976}.Debug|x64.ActiveCfg = Debug|x64
+		{0966E4B1-A9C1-44FA-9ADD-1368743CD976}.Debug|x64.Build.0 = Debug|x64
+		{0966E4B1-A9C1-44FA-9ADD-1368743CD976}.Debug|x86.ActiveCfg = Debug|Win32
+		{0966E4B1-A9C1-44FA-9ADD-1368743CD976}.Debug|x86.Build.0 = Debug|Win32
+		{0966E4B1-A9C1-44FA-9ADD-1368743CD976}.Release|x64.ActiveCfg = Release|x64
+		{0966E4B1-A9C1-44FA-9ADD-1368743CD976}.Release|x64.Build.0 = Release|x64
+		{0966E4B1-A9C1-44FA-9ADD-1368743CD976}.Release|x86.ActiveCfg = Release|Win32
+		{0966E4B1-A9C1-44FA-9ADD-1368743CD976}.Release|x86.Build.0 = Release|Win32
+		{6A924B32-AEB8-4B76-B696-0055428D812D}.Debug|x64.ActiveCfg = Debug|x64
+		{6A924B32-AEB8-4B76-B696-0055428D812D}.Debug|x64.Build.0 = Debug|x64
+		{6A924B32-AEB8-4B76-B696-0055428D812D}.Debug|x86.ActiveCfg = Debug|Win32
+		{6A924B32-AEB8-4B76-B696-0055428D812D}.Debug|x86.Build.0 = Debug|Win32
+		{6A924B32-AEB8-4B76-B696-0055428D812D}.Release|x64.ActiveCfg = Release|x64
+		{6A924B32-AEB8-4B76-B696-0055428D812D}.Release|x64.Build.0 = Release|x64
+		{6A924B32-AEB8-4B76-B696-0055428D812D}.Release|x86.ActiveCfg = Release|Win32
+		{6A924B32-AEB8-4B76-B696-0055428D812D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
