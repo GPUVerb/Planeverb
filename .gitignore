@@ -38,3 +38,9 @@ bin-int/
 
 # profiling data
 *.vspx
+
+# Unity
+UnityDemo/PlaneverbTest/Library
+UnityDemo/PlaneverbTest/Packages
+UnityDemo/PlaneverbTest/Logs
+UnityDemo/PlaneverbTest/Temp
