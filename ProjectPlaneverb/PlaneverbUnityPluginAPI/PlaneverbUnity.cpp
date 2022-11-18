@@ -1,6 +1,8 @@
 #pragma once
 #include "IUnityInterface.h"
 #include "Planeverb.h"
+#include "Context/PvContext.h"
+#include "FDTD/Grid.h"
 
 #define PVU_CC UNITY_INTERFACE_API
 #define PVU_EXPORT UNITY_INTERFACE_EXPORT
@@ -133,6 +135,25 @@ extern "C"
 	{
 		Planeverb::SetListenerPosition(Planeverb::vec3(x, y, z));
 	}
+#pragma endregion
+
+#pragma region FDTD Export
+	PVU_EXPORT float PVU_CC
+	PlaneverbGetResponsePressure(float x, float z) {
+		auto*      context = Planeverb::GetContext();
+		const auto grid    = context->GetGrid();
+		const auto offset  = grid->GetGridOffset();
+		const auto gridPos = Planeverb::vec2{ (x + offset.x) / grid->GetDX(), (z + offset.y) / grid->GetDX() };
+
+		const auto gridSize = grid->GetGridSize();
+		if (gridPos.x > gridSize.x || gridPos.y > gridSize.y)
+			return 0;
+
+		const int n = grid->GetResponseSize();
+		const auto data = grid->GetResponse(gridPos)[n-1];
+		return data.pr;
+	}
+
 #pragma endregion
 
 }
