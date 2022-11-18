@@ -138,8 +138,8 @@ extern "C"
 #pragma endregion
 
 #pragma region FDTD Export
-	PVU_EXPORT float PVU_CC
-	PlaneverbGetResponsePressure(float x, float z) {
+	PVU_EXPORT int PVU_CC
+	PlaneverbGetResponsePressure(float x, float z, float out[]) {
 		auto*      context = Planeverb::GetContext();
 		const auto grid    = context->GetGrid();
 		const auto offset  = grid->GetGridOffset();
@@ -150,8 +150,11 @@ extern "C"
 			return 0;
 
 		const int n = grid->GetResponseSize();
-		const auto data = grid->GetResponse(gridPos)[n-1];
-		return data.pr;
+		const auto data = grid->GetResponse(gridPos);
+		for (int i = 0; i < n; ++i) {
+			out[i] = data[i].pr;
+		}
+		return n;
 	}
 
 #pragma endregion

@@ -252,8 +252,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minCorner: {x: 0, y: 0}
   maxCorner: {x: 9, y: 9}
+  cubeSize: 0.1
   baseHeight: 0.5
-  scale: 50
+  scale: 10
+  simTime: 4
 --- !u!4 &139544083
 Transform:
   m_ObjectHideFlags: 0
