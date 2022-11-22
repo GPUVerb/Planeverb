@@ -1,8 +1,13 @@
 #pragma once
+#include <array>
+
 #include "IUnityInterface.h"
 #include "Planeverb.h"
 #include "Context/PvContext.h"
+
+
 #include "FDTD/Grid.h"
+#include <unordered_map>
 
 #define PVU_CC UNITY_INTERFACE_API
 #define PVU_EXPORT UNITY_INTERFACE_EXPORT
@@ -138,10 +143,23 @@ extern "C"
 #pragma endregion
 
 #pragma region FDTD Export
+
+	extern "C++" {
+		static std::vector<Planeverb::Grid*> s_userGrids;
+		static std::vector<std::vector<char>> s_userMem;
+	}
+
 	PVU_EXPORT int PVU_CC
-	PlaneverbGetResponsePressure(float x, float z, float out[]) {
+	PlaneverbGetResponsePressure(int gridId, float x, float z, float out[]) {
 		auto*      context = Planeverb::GetContext();
-		const auto grid    = context->GetGrid();
+		const auto grid = [&]() {
+			if(gridId == -1) {
+				return context->GetGrid();
+			} else {
+				return s_userGrids[gridId];
+			}
+		}();
+
 		const auto offset  = grid->GetGridOffset();
 		const auto gridPos = Planeverb::vec2{ (x + offset.x) / grid->GetDX(), (z + offset.y) / grid->GetDX() };
 
@@ -157,6 +175,109 @@ extern "C"
 		return n;
 	}
 
-#pragma endregion
 
+
+	PVU_EXPORT int PVU_CC
+    PlaneverbCreateGrid(float sizeX, float sizeY, int gridResolution) {
+		Planeverb::PlaneverbConfig config { };
+		config.gridSizeInMeters = Planeverb::vec2{ sizeX, sizeY };
+		config.gridResolution = gridResolution;
+		config.tempFileDirectory = ".";
+		const auto memSize = Planeverb::Grid::GetMemoryRequirement(&config);
+		auto userMem = std::vector<char>(memSize);
+
+		const auto pGrid = new Planeverb::Grid{ &config, userMem.data() };
+
+		int id;
+		for (id = 0; id < s_userGrids.size() && s_userGrids[id]; ++id);
+		if (id == s_userGrids.size()) {
+			s_userGrids.push_back(pGrid);
+			s_userMem.emplace_back(std::move(userMem));
+		} else {
+			s_userGrids[id] = pGrid;
+			s_userMem[id] = std::move(userMem);
+		}
+
+		return id;
+	}
+
+	PVU_EXPORT void PVU_CC
+	PlaneverbDestroyGrid(int id) {
+		if(id >= 0 && id < s_userGrids.size() && s_userGrids[id]) {
+			delete s_userGrids[id];
+			s_userGrids[id] = nullptr;
+			s_userMem[id].clear();
+		}
+	}
+
+	PVU_EXPORT int PVU_CC
+	PlaneverbGetGridResponseLength(int id) {
+		if (id >= 0 && id < s_userGrids.size() && s_userGrids[id]) {
+			return s_userGrids[id]->GetResponseSize();
+		} else {
+			return 0;
+		}
+	}
+	PVU_EXPORT void PVU_CC
+	MDArrayTest(int arr[], int x, int y, int z) {
+		for(int i=0; i<x; ++i) {
+			for(int j=0; j<y; ++j) {
+				for(int k=0; k<z; ++k) {
+					arr[i * y * z + j * z + k] = (i+1)*(j+1)*(k+1);
+				}
+			}
+		}
+	}
+	PVU_EXPORT void PVU_CC
+	CopyTest(int dst[], int src[], int n) {
+		std::memcpy(dst, src, n * sizeof(*dst));
+	}
+
+	PVU_EXPORT void PVU_CC
+	PlaneverbGetGridResponse(int gridId, float listenerX, float listenerZ, Planeverb::Cell out[]) {
+		if (gridId >= 0 && gridId < s_userGrids.size() && s_userGrids[gridId]) {
+			auto const& grid = s_userGrids[gridId];
+			grid->GenerateResponseCPU(Planeverb::vec3{ listenerX, 0, listenerZ });
+
+			const Planeverb::vec2 dim = grid->GetGridSize();
+
+			const int xSize = static_cast<int>(dim.x + 1);
+			const int ySize = static_cast<int>(dim.y + 1);
+			const int zSize = static_cast<int>(grid->GetResponseSize());
+
+			for(int x = 0; x < xSize; ++x) {
+				for(int y = 0; y < ySize; ++y) {
+					const auto data = grid->GetResponse(Planeverb::vec2{ static_cast<float>(x),static_cast<float>(y) });
+					for (int k = 0; k < zSize; ++k) {
+						out[x * (ySize * zSize) + y * zSize + k] = data[k];
+					}
+				}
+			}
+		}
+	}
+
+	PVU_EXPORT void PVU_CC
+    PlaneverbAddAABB(int gridId, Planeverb::AABB aabb) {
+		if (gridId >= 0 && gridId < s_userGrids.size() && s_userGrids[gridId]) {
+			auto const& grid = s_userGrids[gridId];
+			grid->AddAABB(&aabb);
+		}
+	}
+
+	PVU_EXPORT void PVU_CC
+	PlaneverbUpdateAABB(int gridId, Planeverb::AABB oldVal, Planeverb::AABB newVal) {
+		if (gridId >= 0 && gridId < s_userGrids.size() && s_userGrids[gridId]) {
+			auto const& grid = s_userGrids[gridId];
+			grid->UpdateAABB(&oldVal, &newVal);
+		}
+	}
+
+	PVU_EXPORT void PVU_CC
+	PlaneverbRemoveAABB(int gridId, Planeverb::AABB aabb) {
+		if (gridId >= 0 && gridId < s_userGrids.size() && s_userGrids[gridId]) {
+			auto const& grid = s_userGrids[gridId];
+			grid->RemoveAABB(&aabb);
+		}
+	}
+#pragma endregion
 }
