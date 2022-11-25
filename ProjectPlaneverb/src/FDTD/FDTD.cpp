@@ -74,7 +74,7 @@ namespace Planeverb
 	Cell* Grid::GetResponse(const vec2& gridPosition)
 	{
 		vec2 incDim(m_gridSize.x + 1, m_gridSize.y + 1);
-		int index = INDEX((int)gridPosition.x, (int)gridPosition.y, incDim);
+		int index = (int)gridPosition.x * (int)incDim.y + gridPosition.y; // INDEX((int)gridPosition.x, (int)gridPosition.y, incDim);
 		return m_pulseResponse[index].data();
 	}
 
