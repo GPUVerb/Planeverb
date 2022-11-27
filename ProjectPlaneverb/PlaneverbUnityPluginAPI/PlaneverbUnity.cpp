@@ -7,6 +7,8 @@
 
 
 #include "FDTD/Grid.h"
+#include "FDTD/FreeGrid.h"
+#include <DSP\Analyzer.h>
 #include <unordered_map>
 
 #define PVU_CC UNITY_INTERFACE_API
@@ -234,10 +236,20 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-	PlaneverbGetGridResponse(int gridId, float listenerX, float listenerZ, Planeverb::Cell out[]) {
+	PlaneverbGenerateGridResponse(int gridId, float listenerX, float listenerZ) {
 		if (gridId >= 0 && gridId < s_userGrids.size() && s_userGrids[gridId]) {
 			auto const& grid = s_userGrids[gridId];
-			grid->GenerateResponseCPU(Planeverb::vec3{ listenerX, 0, listenerZ });
+			grid->GenerateResponse(Planeverb::vec3{ listenerX, 0, listenerZ });
+		}
+	}
+
+	PVU_EXPORT void PVU_CC
+	PlaneverbGetGridResponse(int gridId, float listenerX, float listenerZ, Planeverb::Cell out[]) {
+		if (gridId >= 0 && gridId < s_userGrids.size() && s_userGrids[gridId]) {
+
+			auto const& grid = s_userGrids[gridId];
+			//grid->GenerateResponseCPU(Planeverb::vec3{ listenerX, 0, listenerZ });
+			PlaneverbGenerateGridResponse(gridId, listenerX, listenerZ);
 
 			const Planeverb::vec2 dim = grid->GetGridSize();
 
@@ -280,4 +292,116 @@ extern "C"
 		}
 	}
 #pragma endregion
+
+#pragma region Analyzer Export
+
+	extern "C++" {
+		static std::vector<Planeverb::FreeGrid*> s_userFreeGrids;
+		static std::vector<std::vector<char>> s_userFreeMem;
+		static std::vector<Planeverb::Analyzer*> s_userAnalyzers;
+		static std::vector<std::vector<char>> s_userAnaMem;
+	}
+
+	PVU_EXPORT int PVU_CC
+		PlaneverbCreateFreeGrid(float sizeX, float sizeY, int gridResolution) {
+		Planeverb::PlaneverbConfig config{ };
+		config.gridSizeInMeters = Planeverb::vec2{ sizeX, sizeY };
+		config.gridResolution = gridResolution;
+		config.tempFileDirectory = ".";
+		const auto memSize =  Planeverb::FreeGrid::GetMemoryRequirement(&config);
+		auto userMem = std::vector<char>(memSize);
+
+		const auto pGrid = new Planeverb::FreeGrid{ &config, userMem.data() };
+
+		int id;
+		for (id = 0; id < s_userFreeGrids.size() && s_userFreeGrids[id]; ++id);
+		if (id == s_userFreeGrids.size()) {
+			s_userFreeGrids.push_back(pGrid);
+			s_userFreeMem.emplace_back(std::move(userMem));
+		}
+		else {
+			s_userFreeGrids[id] = pGrid;
+			s_userFreeMem[id] = std::move(userMem);
+		}
+
+		return id;
+	}
+
+	PVU_EXPORT void PVU_CC
+		PlaneverbDestroyFreeGrid(int id) {
+		if (id >= 0 && id < s_userFreeGrids.size() && s_userFreeGrids[id]) {
+			delete s_userFreeGrids[id];
+			s_userFreeGrids[id] = nullptr;
+			s_userFreeMem[id].clear();
+		}
+	}
+
+	PVU_EXPORT int PVU_CC
+		PlaneverbCreateAnalyzer(unsigned int in_id, float sizeX, float sizeY, int gridResolution) {
+		Planeverb::PlaneverbConfig config{ };
+		config.gridSizeInMeters = Planeverb::vec2{ sizeX, sizeY };
+		config.gridResolution = gridResolution;
+		config.tempFileDirectory = ".";
+		const auto memSize = Planeverb::Analyzer::GetMemoryRequirement(&config);
+		auto userMem = std::vector<char>(memSize);
+
+		const auto m_analyzer = new Planeverb::Analyzer{s_userGrids[in_id],s_userFreeGrids[in_id], userMem.data() };
+
+		int id;
+		for (id = 0; id < s_userAnalyzers.size() && s_userAnalyzers[id]; ++id);
+		if (id == s_userAnalyzers.size()) {
+			s_userAnalyzers.push_back(m_analyzer);
+			s_userAnaMem.emplace_back(std::move(userMem));
+		}
+		else {
+			s_userAnalyzers[id] = m_analyzer;
+			s_userAnaMem[id] = std::move(userMem);
+		}
+
+		return id;
+	}
+
+	PVU_EXPORT void PVU_CC
+		PlaneverbDestroyAnalyzer(int id) {
+		if (id >= 0 && id < s_userAnalyzers.size() && s_userAnalyzers[id]) {
+			delete s_userAnalyzers[id];
+			s_userAnalyzers[id] = nullptr;
+			s_userAnaMem[id].clear();
+		}
+	}
+
+	PVU_EXPORT void PVU_CC
+	PlaneverbAnalyzeResponses(int gridId, float listenerX, float listenerZ) {
+		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
+			auto const& m_analyzer = s_userAnalyzers[gridId];
+			m_analyzer->AnalyzeResponses(Planeverb::vec3{ listenerX, 0, listenerZ });
+		}
+	}
+
+	//Not yet, need to figure out the emissionID
+	// PVU_EXPORT void PVU_CC
+	//	PlaneverbGetAnalyzerResponses(int gridId, Planeverb::AnalyzerResult out[]) {
+	//	if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
+	//		auto const& grid = s_userGrids[gridId];
+	//		auto const& m_analyzer = s_userAnalyzers[gridId];
+	//		//grid->GenerateResponseCPU(Planeverb::vec3{ listenerX, 0, listenerZ });
+
+	//		const Planeverb::vec2 dim = grid->GetGridSize();
+
+	//		const int xSize = static_cast<int>(dim.x + 1);
+	//		const int ySize = static_cast<int>(dim.y + 1);
+	//		const int zSize = static_cast<int>(grid->GetResponseSize());
+
+	//		for (int x = 0; x < xSize; ++x) {
+	//			for (int y = 0; y < ySize; ++y) {
+	//				const auto data = grid->GetResponse(Planeverb::vec2{ static_cast<float>(x),static_cast<float>(y) });
+	//				for (int k = 0; k < zSize; ++k) {
+	//					out[x * (ySize * zSize) + y * zSize + k] = data[k];
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+#pragma endregion
+
 }
