@@ -10,6 +10,7 @@
 #include "FDTD/FreeGrid.h"
 #include <Emissions\EmissionManager.h>
 #include <DSP\Analyzer.h>
+#include <PvTypes.h>
 #include <unordered_map>
 
 #define PVU_CC UNITY_INTERFACE_API
@@ -431,6 +432,56 @@ extern "C"
 			auto const& m_analyzer = s_userAnalyzers[gridId];
 			m_analyzer->AnalyzeResponses(Planeverb::vec3{ listenerX, 0, listenerZ });
 		}
+	}
+
+	PVU_EXPORT void PVU_CC
+	PlaneverbGetOneAnalyzerResponse(int gridId, float emitterX, float emitterY, float emitterZ, Planeverb::AnalyzerResult* out) {
+		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
+			auto const& m_analyzer = s_userAnalyzers[gridId];
+			*out = *m_analyzer->GetResponseResult(Planeverb::vec3(emitterX, emitterY, emitterZ));
+		}
+	}
+
+	PVU_EXPORT PlaneverbOutput PVU_CC
+		PlaneverbGetOutput(int gridId, int emissionID)
+	{
+		PlaneverbOutput out;
+		std::memset(&out, 0, sizeof(out));
+		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId] && gridId < s_userEmissionManagers.size() && s_userEmissionManagers[gridId]) {
+			auto const& m_analyzer = s_userAnalyzers[gridId];
+			auto const& m_emissions = s_userEmissionManagers[gridId];
+
+
+			const auto* emitterPos = m_emissions->GetEmitter(emissionID);
+
+			// case emitter is invalid
+			if (!emitterPos)
+			{
+				out.occlusion = -1.0;
+				return out;
+			}
+
+			auto* result = m_analyzer->GetResponseResult(*emitterPos);
+
+			// case invalid emitter position
+			if (!result)
+			{
+				out.occlusion = -1.0;
+				return out;
+			}
+
+			// copy over values
+			out.occlusion = (float)result->occlusion;
+			out.wetGain = (float)result->wetGain;
+			out.lowpass = (float)result->lowpassIntensity;
+			out.rt60 = (float)result->rt60;
+			out.directionX = result->direction.x;
+			out.directionY = result->direction.y;
+			out.sourceDirectionX = result->sourceDirectivity.x;
+			out.sourceDirectionY = result->sourceDirectivity.y;
+
+		}
+		return out;
 	}
 
 	PVU_EXPORT void PVU_CC
