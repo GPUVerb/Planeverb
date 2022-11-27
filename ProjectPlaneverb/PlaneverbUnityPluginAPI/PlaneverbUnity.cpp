@@ -8,6 +8,7 @@
 
 #include "FDTD/Grid.h"
 #include "FDTD/FreeGrid.h"
+#include <Emissions\EmissionManager.h>
 #include <DSP\Analyzer.h>
 #include <unordered_map>
 
@@ -293,25 +294,83 @@ extern "C"
 	}
 #pragma endregion
 
+
+	/*
+		Correct set up order:
+		PlaneverbCreateGrid()
+		//missing geometrymanager
+		PlaneverbCreateConfig() // should be above PlaneverbCreateGrid()
+		PlaneverbCreateEmissionManager()
+		PlaneverbCreateFreeGrid()
+		PlaneverbCreateAnalyzer()
+
+		Correct loop order:
+		GenerateGridResponse()
+		GenerateAnalyzerRespone()
+
+		Correct Data Access Functions:
+		GetGridResponses()
+	*/
+
 #pragma region Analyzer Export
 
 	extern "C++" {
+		static Planeverb::PlaneverbConfig s_userConfig;
+
+		static std::vector<Planeverb::EmissionManager*> s_userEmissionManagers;
+		static std::vector<std::vector<char>> s_userEmiMem;
+
 		static std::vector<Planeverb::FreeGrid*> s_userFreeGrids;
 		static std::vector<std::vector<char>> s_userFreeMem;
+
 		static std::vector<Planeverb::Analyzer*> s_userAnalyzers;
 		static std::vector<std::vector<char>> s_userAnaMem;
 	}
 
+	PVU_EXPORT void PVU_CC
+	PlaneverbCreateConfig(float sizeX, float sizeY, int gridResolution) {
+		s_userConfig.gridSizeInMeters = Planeverb::vec2{ sizeX, sizeY };
+		s_userConfig.gridResolution = gridResolution;
+		s_userConfig.tempFileDirectory = ".";
+	}
+
 	PVU_EXPORT int PVU_CC
-		PlaneverbCreateFreeGrid(float sizeX, float sizeY, int gridResolution) {
-		Planeverb::PlaneverbConfig config{ };
-		config.gridSizeInMeters = Planeverb::vec2{ sizeX, sizeY };
-		config.gridResolution = gridResolution;
-		config.tempFileDirectory = ".";
-		const auto memSize =  Planeverb::FreeGrid::GetMemoryRequirement(&config);
+	PlaneverbCreateEmissionManager() {
+		const auto memSize = Planeverb::EmissionManager::GetMemoryRequirement(&s_userConfig);
 		auto userMem = std::vector<char>(memSize);
 
-		const auto pGrid = new Planeverb::FreeGrid{ &config, userMem.data() };
+		const auto pGrid = new Planeverb::EmissionManager{ userMem.data() };
+
+		int id;
+		for (id = 0; id < s_userEmissionManagers.size() && s_userEmissionManagers[id]; ++id);
+		if (id == s_userEmissionManagers.size()) {
+			s_userEmissionManagers.push_back(pGrid);
+			s_userEmiMem.emplace_back(std::move(userMem));
+		}
+		else {
+			s_userEmissionManagers[id] = pGrid;
+			s_userEmiMem[id] = std::move(userMem);
+		}
+
+		return id;
+	}
+
+	PVU_EXPORT void PVU_CC
+	PlaneverbDestroyEmissionManager(int id) {
+		if (id >= 0 && id < s_userEmissionManagers.size() && s_userEmissionManagers[id]) {
+			delete s_userEmissionManagers[id];
+			s_userEmissionManagers[id] = nullptr;
+			s_userEmiMem[id].clear();
+		}
+	}
+
+
+	PVU_EXPORT int PVU_CC
+	PlaneverbCreateFreeGrid() {
+		const auto memSize =  Planeverb::FreeGrid::GetMemoryRequirement(&s_userConfig);
+		auto userMem = std::vector<char>(memSize);
+
+		const auto pGrid = new Planeverb::FreeGrid{ &s_userConfig, userMem.data() };
 
 		int id;
 		for (id = 0; id < s_userFreeGrids.size() && s_userFreeGrids[id]; ++id);
@@ -328,7 +387,7 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-		PlaneverbDestroyFreeGrid(int id) {
+	PlaneverbDestroyFreeGrid(int id) {
 		if (id >= 0 && id < s_userFreeGrids.size() && s_userFreeGrids[id]) {
 			delete s_userFreeGrids[id];
 			s_userFreeGrids[id] = nullptr;
@@ -337,12 +396,8 @@ extern "C"
 	}
 
 	PVU_EXPORT int PVU_CC
-		PlaneverbCreateAnalyzer(unsigned int in_id, float sizeX, float sizeY, int gridResolution) {
-		Planeverb::PlaneverbConfig config{ };
-		config.gridSizeInMeters = Planeverb::vec2{ sizeX, sizeY };
-		config.gridResolution = gridResolution;
-		config.tempFileDirectory = ".";
-		const auto memSize = Planeverb::Analyzer::GetMemoryRequirement(&config);
+	PlaneverbCreateAnalyzer(unsigned int in_id) {
+		const auto memSize = Planeverb::Analyzer::GetMemoryRequirement(&s_userConfig);
 		auto userMem = std::vector<char>(memSize);
 
 		const auto m_analyzer = new Planeverb::Analyzer{s_userGrids[in_id],s_userFreeGrids[in_id], userMem.data() };
@@ -362,7 +417,7 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-		PlaneverbDestroyAnalyzer(int id) {
+	PlaneverbDestroyAnalyzer(int id) {
 		if (id >= 0 && id < s_userAnalyzers.size() && s_userAnalyzers[id]) {
 			delete s_userAnalyzers[id];
 			s_userAnalyzers[id] = nullptr;
@@ -378,30 +433,34 @@ extern "C"
 		}
 	}
 
-	//Not yet, need to figure out the emissionID
-	// PVU_EXPORT void PVU_CC
-	//	PlaneverbGetAnalyzerResponses(int gridId, Planeverb::AnalyzerResult out[]) {
-	//	if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
-	//		auto const& grid = s_userGrids[gridId];
-	//		auto const& m_analyzer = s_userAnalyzers[gridId];
-	//		//grid->GenerateResponseCPU(Planeverb::vec3{ listenerX, 0, listenerZ });
+	PVU_EXPORT void PVU_CC
+	PlaneverbGetOneAnalyzerResponse(int gridId, float emitterX, float emitterY, float emitterZ, Planeverb::AnalyzerResult* out) {
+		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
+			auto const& m_analyzer = s_userAnalyzers[gridId];
+			*out = *m_analyzer->GetResponseResult(Planeverb::vec3(emitterX, emitterY, emitterZ));
+		}
+	}
 
-	//		const Planeverb::vec2 dim = grid->GetGridSize();
+	// we use the size of the grid to access data, with z set to 0
+	// just a hack for accessing analyzerResponses without getting the final output
+	PVU_EXPORT void PVU_CC
+	PlaneverbGetAnalyzerResponses(int gridId, Planeverb::AnalyzerResult out[]) {
+		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
+			auto const& grid = s_userGrids[gridId];
+			auto const& m_analyzer = s_userAnalyzers[gridId];
 
-	//		const int xSize = static_cast<int>(dim.x + 1);
-	//		const int ySize = static_cast<int>(dim.y + 1);
-	//		const int zSize = static_cast<int>(grid->GetResponseSize());
+			const Planeverb::vec2 dim = grid->GetGridSize();
 
-	//		for (int x = 0; x < xSize; ++x) {
-	//			for (int y = 0; y < ySize; ++y) {
-	//				const auto data = grid->GetResponse(Planeverb::vec2{ static_cast<float>(x),static_cast<float>(y) });
-	//				for (int k = 0; k < zSize; ++k) {
-	//					out[x * (ySize * zSize) + y * zSize + k] = data[k];
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
+			const int xSize = static_cast<int>(dim.x + 1);
+			const int ySize = static_cast<int>(dim.y + 1);
+
+			for (int x = 0; x < xSize; ++x) {
+				for (int y = 0; y < ySize; ++y) {
+					out[x * ySize + y] = *m_analyzer->GetResponseResult(Planeverb::vec3{ static_cast<float>(x),static_cast<float>(y),0 });
+				}
+			}
+		}
+	}
 #pragma endregion
 
 }
