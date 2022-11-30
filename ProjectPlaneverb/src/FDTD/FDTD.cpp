@@ -61,20 +61,19 @@ namespace Planeverb
 	{
 		Grid* grid = GetContext()->GetGrid();
 		Real dx = grid->GetDX();
-		vec2 gridPosition =
+		vec2i gridPosition =
 		{
-			position.x / dx,
-			position.z / dx
+			(unsigned)(position.x / dx),
+			(unsigned)(position.z / dx)
 		};
 		return std::make_pair(grid->GetResponse(gridPosition), grid->GetResponseSize());
 	}
 
 #pragma endregion
 	
-	Cell* Grid::GetResponse(const vec2& gridPosition)
+	Cell* Grid::GetResponse(const vec2i& gridPosition)
 	{
-		vec2 incDim(m_gridSize.x + 1, m_gridSize.y + 1);
-		int index = (int)gridPosition.x * (int)incDim.y + gridPosition.y; // INDEX((int)gridPosition.x, (int)gridPosition.y, incDim);
+		unsigned index = gridPosition.x * m_gridSize.y + gridPosition.y; // INDEX((int)gridPosition.x, (int)gridPosition.y, incDim);
 		return m_pulseResponse[index].data();
 	}
 
@@ -90,15 +89,14 @@ namespace Planeverb
 		const Real Courant = PV_C * m_dt / m_dx;
 
 		// grid constants
-		const int gridx = (int)m_gridSize.x;
-		const int gridy = (int)m_gridSize.y;
-		const vec2 dim = m_gridSize;
-		const vec2 incdim(dim.x + 1, dim.y + 1);
-		const int listenerPosX = (int)((listener.x + m_gridOffset.x) / m_dx);
-		const int listenerPosY = (int)((listener.z + m_gridOffset.y) / m_dx);
-		const int listenerPos = listenerPosX * (gridy + 1) + listenerPosY;
-		const int responseLength = m_responseLength;
-		int loopSize = (int)(incdim.x) * (int)(incdim.y);
+		const unsigned gridx = m_gridSize.x;
+		const unsigned gridy = m_gridSize.y;
+		const vec2i incdim = m_gridSize;
+		const unsigned listenerPosX = (unsigned)((listener.x + m_gridOffset.x) / m_dx);
+		const unsigned listenerPosY = (unsigned)((listener.z + m_gridOffset.y) / m_dx);
+		const unsigned listenerPos = listenerPosX * gridy + listenerPosY;
+		const unsigned responseLength = m_responseLength;
+		unsigned loopSize = incdim.x * incdim.y;
 
 		// thread usage
 		if (m_maxThreads == 0)
@@ -109,8 +107,8 @@ namespace Planeverb
 		// RESET all pressure and velocity, but not B fields (can't use memset)
 		{
 			Cell* resetPtr = m_grid;
-            const int N = loopSize;
-			for (int i = 0; i < N; ++i, ++resetPtr)
+            const unsigned N = loopSize;
+			for (unsigned i = 0; i < N; ++i, ++resetPtr)
 			{
 				resetPtr->pr = 0.f;
 				resetPtr->vx = 0.f;
@@ -119,19 +117,19 @@ namespace Planeverb
 		}
 
 		// Time-stepped FDTD simulation
-		for (int t = 0; t < responseLength; ++t)
+		for (unsigned t = 0; t < responseLength; ++t)
 		{
 			// process pressure grid
 			{
-                const int N = loopSize;
-                for (int i = 0; i < N; ++i)
+                const unsigned N = loopSize;
+                for (unsigned i = 0; i < N; ++i)
 				{
 					Cell& thisCell = m_grid[i];
 					int B = (int)thisCell.b;
 					Real beta = (Real)B;
 					//TODO: Check outside bounds access on ends?
 					// [i + 1, j]
-					const Cell& nextCellX = m_grid[i + gridy + 1];	
+					const Cell& nextCellX = m_grid[i + gridy];	
 					// [i, j + 1]
 					const Cell& nextCellY = m_grid[i + 1];
 
@@ -143,10 +141,10 @@ namespace Planeverb
 			// process x component of particle velocity
 			{
 				// eq to for(1 to sizex) for(0 to sizey)
-				for (int i = gridy + 1; i < loopSize; ++i)
+				for (unsigned i = gridy ; i < loopSize; ++i)
 				{
 					// [i - 1, j]
-					auto in = (i - gridy - 1);
+					auto in = (i - gridy);
 					const Cell& prevCell = m_grid[in];
 					Real beta_n = (Real)prevCell.b;
 					Real Rn = m_boundaries[in].absorption; 
@@ -172,7 +170,7 @@ namespace Planeverb
 			// process y component of particle velocity
 			{
 				// eq to for(0 to sizex) for(1 to sizey)
-				for (int i = 1; i < loopSize; ++i)
+				for (unsigned i = 1; i < loopSize; ++i)
 				{
 					// [i, j - 1]
 					const auto in = i - 1;
@@ -200,22 +198,22 @@ namespace Planeverb
 
 			// process absorption top/bottom
 			{
-				for (int i = 0; i < gridy; ++i)
+				for (int i = 0; i < gridy - 1; ++i)
 				{
-					int index1 = i;
-					int index2 = gridx * (gridy + 1) + i;
+					unsigned index1 = i;
+					unsigned index2 = gridx * gridy  + i;
 
 					m_grid[index1].vx = -m_grid[index1].pr;
-					m_grid[index2].vx = m_grid[index2 - gridy - 1].pr;
+					m_grid[index2].vx = m_grid[index2 - gridy].pr;
 				}
 			}
 
 			// process absorption left/right
 			{
-				for (int i = 0; i < gridx; ++i)
+				for (unsigned i = 0; i < gridx - 1; ++i)
 				{
-					int index1 = i * (gridy + 1);
-					int index2 = i * (gridy + 1) + gridy;
+					unsigned index1 = i * gridy ;
+					unsigned index2 = i * gridy + gridy-1;
 
 					m_grid[index1].vy = -m_grid[index1].pr;
 					m_grid[index2].vy = m_grid[index2 - 1].pr;
@@ -224,7 +222,7 @@ namespace Planeverb
 
 			// add results to the response cube
 			{
-				for (int i = 0; i < loopSize; ++i)
+				for (unsigned i = 0; i < loopSize; ++i)
 				{
 					m_pulseResponse[i][t] = m_grid[i];
 				}

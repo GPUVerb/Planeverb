@@ -28,11 +28,14 @@ namespace Planeverb
 		~Analyzer();
 
         void AnalyzeResponses(const vec3& listenerPos);
-		const AnalyzerResult* GetResponseResult(const vec3& emitterPos) const;
+		/*const*/ AnalyzerResult* GetResponseResult(const vec3& emitterPos) const;
+		AnalyzerResult* GetResponseByIndex(unsigned index);
 		static unsigned GetMemoryRequirement(const struct PlaneverbConfig* config);
+		unsigned GetGridX() { return m_gridX; }
+		unsigned GetGridY() { return m_gridY; }
 
 	private:
-        void EncodeResponse(unsigned serialIndex, vec2 gridIndex, const Cell* response, const vec3& listenerPos, unsigned numSamples);
+        void EncodeResponse(unsigned serialIndex, vec2i gridIndex, const Cell* response, const vec3& listenerPos, unsigned numSamples);
 		vec2 EncodeListenerDirection(unsigned index, const Cell* response, const vec3& listenerPos, unsigned numSamples);
 		char* m_mem;				// pool of memory
 		AnalyzerResult* m_results;	// 2D grid using 1D memory, grid of results

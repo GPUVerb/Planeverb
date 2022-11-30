@@ -28,6 +28,19 @@ namespace Planeverb
 		~vec2() = default;
 	};
 
+	struct vec2i
+	{
+		union
+		{
+			struct { unsigned x, y; };
+			unsigned m[2];
+		};
+		vec2i(unsigned _x = 0, unsigned _y = 0) : x(_x), y(_y) {}
+		vec2i& operator=(const vec2i&) = default;
+		vec2i(const vec2i& rhs) = default;
+		~vec2i() = default;
+	};
+
 	struct AABB
 	{
 		vec2 position;

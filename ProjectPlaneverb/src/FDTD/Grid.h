@@ -32,12 +32,12 @@ namespace Planeverb
 		void GenerateResponseCPU(const vec3& listener);
 		void GenerateResponseGPU(const vec3& listener);
 		void GenerateResponse(const vec3& listener);
-		Cell* GetResponse(const vec2& gridPosition);
+		Cell* GetResponse(const vec2i& gridPosition);
 		unsigned GetResponseSize() const;
 
 		unsigned GetSamplingRate() const { return m_samplingRate; }
 		unsigned GetMaxThreads() const { return m_maxThreads; }
-		const vec2& GetGridSize() const { return m_gridSize; }
+		const vec2i& GetGridSize() const { return m_gridSize; }
 		const vec2& GetGridOffset() const { return m_gridOffset; }
 		Real GetDX() const { return m_dx; }
 		int GetResolution() const { return m_resolution; }
@@ -63,7 +63,7 @@ namespace Planeverb
 
 		Real m_dx;									// meters per grid cell
 		Real m_dt;									// seconds per sample
-		vec2 m_gridSize;							// grid size (in cells)
+		vec2i m_gridSize;							// grid size (in cells)
 		vec2 m_gridDimensions;						// grid size (in meters)
 		vec2 m_gridOffset;							// our grid uses only first quadrant, user uses all four, not currently implemented fully
 		unsigned m_responseLength;					// number of samples for an IR

@@ -71,19 +71,19 @@ namespace Planeverb
 
 	Real FreeGrid::SimulateFreeFieldEnergy(const PlaneverbConfig* config)
 	{
-		vec2 gridScale = m_grid->GetGridSize();
-		int gridx = (int)gridScale.x;
-		int gridy = (int)gridScale.y;
-		int sizePerGrid = gridx * gridy;
+		vec2i gridScale = m_grid->GetGridSize();
+		unsigned gridx = gridScale.x;
+		unsigned gridy = gridScale.y;
+		unsigned sizePerGrid = gridx * gridy;
 		
-		int listenerX = gridx / 2;
-		int listenerY = gridy / 2;
-		int emitterX = listenerX + (int)(1.f / m_dx);
-		int emitterY = listenerY;
+		unsigned listenerX = gridx / 2;
+		unsigned listenerY = gridy / 2;
+		unsigned emitterX = listenerX + (unsigned)(1.f / m_dx); // why?
+		unsigned emitterY = listenerY;
 
 		// generate a set of IRs in the grid, calculate the free energy
 		m_grid->GenerateResponse(vec3(listenerX * m_dx, 0, listenerY * m_dx));
-		const Cell* response = m_grid->GetResponse(vec2((float)emitterX, (float)emitterY));
+		const Cell* response = m_grid->GetResponse(vec2i(emitterX,emitterY));
         Real freeFieldEnergy = CalculateEFree(response, m_grid->GetResponseSize(), (int)m_grid->GetSamplingRate());
 
         // discrete distance on grid
