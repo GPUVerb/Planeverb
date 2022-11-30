@@ -20,8 +20,8 @@
 #endif
 
 // helper defines
-#define INDEX(row, col, dim) ( (row) * ((unsigned)(dim).x) + (col) )
-#define INDEX_TO_POS(ISET, JSET, i, dim) (ISET) = (i) / (unsigned)(dim).x; (JSET) = (i) % (unsigned)(dim).x
+#define INDEX(row, col, dim) ( (row) * ((unsigned)(dim.y)) + (col) )
+#define INDEX_TO_POS(ISET, JSET, i, dim) (ISET) = (i) / (unsigned)(dim.y); (JSET) = (i) % (unsigned)(dim.y)
 #define INDEX3(row, col, t, dim, maxT) ( (t) + (maxT) * (INDEX((row), (col), (dim))) ) 
 #define INDEX3_2(x, y, z, xmax, ymax, zmax) ((x * (ymax) * (zmax)) + (y * (zmax)) + z)
 #define PV_INLINE inline 

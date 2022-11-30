@@ -434,16 +434,8 @@ extern "C"
 		}
 	}
 
-	PVU_EXPORT void PVU_CC
-	PlaneverbGetOneAnalyzerResponse(int gridId, float emitterX, float emitterY, float emitterZ, Planeverb::AnalyzerResult* out) {
-		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
-			auto const& m_analyzer = s_userAnalyzers[gridId];
-			*out = *m_analyzer->GetResponseResult(Planeverb::vec3(emitterX, emitterY, emitterZ));
-		}
-	}
-
 	PVU_EXPORT PlaneverbOutput PVU_CC
-		PlaneverbGetOutput(int gridId, int emissionID)
+	PlaneverbGetOutputWithID(int gridId, int emissionID)
 	{
 		PlaneverbOutput out;
 		std::memset(&out, 0, sizeof(out));
@@ -500,16 +492,23 @@ extern "C"
 			auto const& grid = s_userGrids[gridId];
 			auto const& m_analyzer = s_userAnalyzers[gridId];
 
+			//out = m_analyzer->GetResponseResult(Planeverb::vec3{0,0,0});
+
 			const Planeverb::vec2 dim = grid->GetGridSize();
 
-			const int xSize = static_cast<int>(dim.x + 1);
-			const int ySize = static_cast<int>(dim.y + 1);
-
-			for (int x = 0; x < xSize; ++x) {
-				for (int y = 0; y < ySize; ++y) {
-					out[x * ySize + y] = *m_analyzer->GetResponseResult(Planeverb::vec3{ static_cast<float>(x),static_cast<float>(y),0 });
-				}
+			const int xSize = static_cast<int>(dim.x + 0.5);
+			const int ySize = static_cast<int>(dim.y + 0.5);
+			unsigned size = xSize * ySize;
+			for (unsigned i = 0; i < size; i++)
+			{
+				out[i] = *m_analyzer->GetResponseByIndex(i);
 			}
+
+			//for (int x = 0; x < xSize; ++x) {
+			//	for (int y = 0; y < ySize; ++y) {
+			//		out[x * ySize + y] = *m_analyzer->GetResponseByIndex(x * ySize + y); //out[x * ySize + y] = *m_analyzer->GetResponseResult(Planeverb::vec3{ static_cast<float>(x),static_cast<float>(y),0 });
+			//	}
+			//}
 		}
 	}
 #pragma endregion

@@ -115,6 +115,15 @@ namespace Planeverb
 		return res;
 	}
 
+    AnalyzerResult* Analyzer::GetResponseByIndex(unsigned index)
+    {
+        if (index < 0 || index >= m_gridX * m_gridY)
+        {
+            return nullptr;
+        }
+        return &m_results[index];
+    }
+
 	unsigned Analyzer::GetMemoryRequirement(const PlaneverbConfig * config)
 	{
 		Real m_dx, m_dt;

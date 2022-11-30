@@ -30,6 +30,7 @@ namespace Planeverb
         void AnalyzeResponses(const vec3& listenerPos);
 		const AnalyzerResult* GetResponseResult(const vec3& emitterPos) const;
 		static unsigned GetMemoryRequirement(const struct PlaneverbConfig* config);
+		AnalyzerResult* GetResponseByIndex(unsigned index);
 
 	private:
         void EncodeResponse(unsigned serialIndex, vec2 gridIndex, const Cell* response, const vec3& listenerPos, unsigned numSamples);
