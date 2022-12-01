@@ -17,9 +17,9 @@ namespace Planeverb
 		m_mem(mem),	m_grid(grid), m_freeGrid(freeGrid), m_results(nullptr)
 	{
 		// set up data
-		vec2 gridSize = m_grid->GetGridSize();
-		m_gridX = (unsigned)gridSize.x;
-		m_gridY = (unsigned)gridSize.y; 
+		vec2i gridSize = m_grid->GetGridSize();
+		m_gridX = gridSize.x;
+		m_gridY = gridSize.y; 
 		m_responseLength = m_grid->GetResponseSize();
 		m_samplingRate = m_grid->GetSamplingRate();
 		m_dx = grid->GetDX();
@@ -27,9 +27,9 @@ namespace Planeverb
 		m_resolution = grid->GetResolution();
 
 		// find size for both grids, allocate pool of memory
-		unsigned size =
-			m_gridX * m_gridY * sizeof(AnalyzerResult) +
-			m_gridX * m_gridY * sizeof(Real);
+		/*unsigned size =
+            (int)m_gridX * (int)m_gridY * sizeof(AnalyzerResult) +
+			(int)m_gridX * (int)m_gridY * sizeof(Real);*/
 		if (!m_mem)
 		{
 			throw pv_NotEnoughMemory;
@@ -37,7 +37,7 @@ namespace Planeverb
 
 		// set grid ptrs into pool
 		m_results = reinterpret_cast<AnalyzerResult*>(m_mem);
-		m_delaySamples = reinterpret_cast<Real*>(m_mem + m_gridX * m_gridY * sizeof(AnalyzerResult));
+		m_delaySamples = reinterpret_cast<Real*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult));
 	}
 	Analyzer::~Analyzer()
 	{
@@ -47,7 +47,7 @@ namespace Planeverb
 
 	void Analyzer::AnalyzeResponses(const vec3& listenerPosGiven)
 	{
-		vec2 dim((Real)m_gridX, (Real)m_gridY);
+		vec2i dim(m_gridX, m_gridY);
 
 		// set OMP thread count
 		if (m_numThreads == 0)
@@ -55,7 +55,7 @@ namespace Planeverb
 		else
 			omp_set_num_threads(m_numThreads);
 
-        int gridSize = (int)m_gridX * (int)m_gridY;
+        unsigned gridSize = (m_gridX) * (m_gridY);
 
 		vec3 listenerPos = listenerPosGiven;
 		listenerPos.x += m_grid->GetGridOffset().x;
@@ -64,21 +64,21 @@ namespace Planeverb
 		// reset delay values
 		Real* delayLooper = m_delaySamples;
 		Real maxVal = (Real)std::numeric_limits<Real>::max();
-		for (int i = 0; i < gridSize; ++i)
+		for (unsigned i = 0; i < gridSize; ++i)
 			*delayLooper++ = maxVal;
 
 		// each type of analysis can be done in parallel
 		// each index can be done in parallel
 		
 //#pragma omp parallel for
-		for (int serialIndex = 0; serialIndex < gridSize; ++serialIndex)
+		for (unsigned serialIndex = 0; serialIndex < gridSize; ++serialIndex)
 		{
 			// convert index to grid position, to retrieve IR
-			vec2 gridIndex;
+			vec2i gridIndex;
 			unsigned gridX, gridY;
 			INDEX_TO_POS(gridX, gridY, serialIndex, dim);
-			gridIndex.x = (Real)gridX;
-			gridIndex.y = (Real)gridY;
+			gridIndex.x = gridX;
+			gridIndex.y = gridY;
 			const Cell* response = m_grid->GetResponse(gridIndex);
 
             EncodeResponse(serialIndex, gridIndex, response, listenerPos, m_responseLength);
@@ -88,14 +88,14 @@ namespace Planeverb
 		// can be run in parallel for each grid position
 		
 //#pragma omp parallel for
-		for (int i = 0; i < gridSize; ++i)
+		for (unsigned i = 0; i < gridSize; ++i)
 		{
 			// retrieve IR
-			vec2 gridIndex;
-			unsigned gridX, gridY;
-			INDEX_TO_POS(gridX, gridY, i, dim);
-			gridIndex.x = (Real)gridX;
-			gridIndex.y = (Real)gridY;
+            vec2i gridIndex;
+            unsigned gridX, gridY;
+            INDEX_TO_POS(gridX, gridY, i, dim);
+            gridIndex.x = gridX;
+            gridIndex.y = gridY;
 			const Cell* response = m_grid->GetResponse(gridIndex);
 
 			// analyze for listener direction
@@ -103,7 +103,7 @@ namespace Planeverb
 		}
 	}
 
-	const AnalyzerResult * Analyzer::GetResponseResult(const vec3 & emitterPos) const 
+	/*const*/ AnalyzerResult * Analyzer::GetResponseResult(const vec3 & emitterPos) const
 	{
 		// retrieve analyzer result based off of an emitter position in world space
 		const auto& offset = m_grid->GetGridOffset();
@@ -111,7 +111,7 @@ namespace Planeverb
 		unsigned posY = (unsigned)((emitterPos.z + offset.y) / m_dx); //(unsigned)(emitterPos.z + offset.y);
 		if (posX > m_gridX || posY > m_gridY)
 			return nullptr;
-		const auto* res = &(m_results[INDEX(posX, posY, vec2((Real)m_gridX, (Real)m_gridY))]);
+		/*const*/ auto* res = &(m_results[INDEX(posX, posY, vec2i(m_gridX, m_gridY))]);
 		return res;
 	}
 
@@ -130,9 +130,9 @@ namespace Planeverb
 		unsigned samplingRate;
 		CalculateGridParameters(config->gridResolution, m_dx, m_dt, samplingRate);
 		
-		vec2 m_gridSize;
-		m_gridSize.x = (1.f / m_dx) * config->gridSizeInMeters.x;
-		m_gridSize.y = (1.f / m_dx) * config->gridSizeInMeters.y;
+		vec2i m_gridSize;
+        m_gridSize.x = (unsigned)((1.f / m_dx) * config->gridSizeInMeters.x + 1);
+        m_gridSize.y = (unsigned)((1.f / m_dx) * config->gridSizeInMeters.y + 1);
 
 		unsigned m_gridX = (unsigned)m_gridSize.x;
 		unsigned m_gridY = (unsigned)m_gridSize.y;
@@ -145,7 +145,7 @@ namespace Planeverb
 		return size;
 	}
 
-    void Analyzer::EncodeResponse(unsigned serialIndex, vec2 gridIndex, const Cell* response, const vec3& listenerPos, unsigned n)
+    void Analyzer::EncodeResponse(unsigned serialIndex, vec2i gridIndex, const Cell* response, const vec3& listenerPos, unsigned n)
     {
         const int numSamples = (int)n;
 
@@ -349,7 +349,7 @@ namespace Planeverb
     vec2 Analyzer::EncodeListenerDirection(unsigned index, const Cell * response, const vec3& listenerPos, unsigned numSamples)
     {
         Real loudness = m_results[index].occlusion;
-        vec2 dim((Real)m_gridX, (Real)m_gridY);
+        vec2i dim(m_gridX, m_gridY);
         int nextIndex = index;
         const constexpr Real maxDelay = std::numeric_limits<Real>::max();
         Real delay = maxDelay;
