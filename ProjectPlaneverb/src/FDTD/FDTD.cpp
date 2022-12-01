@@ -198,7 +198,7 @@ namespace Planeverb
 
 			// process absorption top/bottom
 			{
-				for (int i = 0; i < gridy - 1; ++i)
+				for (int i = 0; i < gridy ; ++i)
 				{
 					unsigned index1 = i;
 					unsigned index2 = gridx * gridy  + i;
@@ -210,7 +210,7 @@ namespace Planeverb
 
 			// process absorption left/right
 			{
-				for (unsigned i = 0; i < gridx - 1; ++i)
+				for (unsigned i = 0; i < gridx ; ++i)
 				{
 					unsigned index1 = i * gridy ;
 					unsigned index2 = i * gridy + gridy-1;

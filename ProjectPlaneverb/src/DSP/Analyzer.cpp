@@ -47,7 +47,7 @@ namespace Planeverb
 
 	void Analyzer::AnalyzeResponses(const vec3& listenerPosGiven)
 	{
-		vec2i dim(m_gridX-1, m_gridY-1);
+		vec2i dim(m_gridX, m_gridY);
 
 		// set OMP thread count
 		if (m_numThreads == 0)
@@ -55,7 +55,7 @@ namespace Planeverb
 		else
 			omp_set_num_threads(m_numThreads);
 
-        unsigned gridSize = (m_gridX-1) * (m_gridY-1);
+        unsigned gridSize = (m_gridX) * (m_gridY);
 
 		vec3 listenerPos = listenerPosGiven;
 		listenerPos.x += m_grid->GetGridOffset().x;
@@ -130,9 +130,9 @@ namespace Planeverb
 		unsigned samplingRate;
 		CalculateGridParameters(config->gridResolution, m_dx, m_dt, samplingRate);
 		
-		vec2 m_gridSize;
-		m_gridSize.x = (1.f / m_dx) * config->gridSizeInMeters.x;
-		m_gridSize.y = (1.f / m_dx) * config->gridSizeInMeters.y;
+		vec2i m_gridSize;
+        m_gridSize.x = (unsigned)((1.f / m_dx) * config->gridSizeInMeters.x + 1);
+        m_gridSize.y = (unsigned)((1.f / m_dx) * config->gridSizeInMeters.y + 1);
 
 		unsigned m_gridX = (unsigned)m_gridSize.x;
 		unsigned m_gridY = (unsigned)m_gridSize.y;
@@ -349,7 +349,7 @@ namespace Planeverb
     vec2 Analyzer::EncodeListenerDirection(unsigned index, const Cell * response, const vec3& listenerPos, unsigned numSamples)
     {
         Real loudness = m_results[index].occlusion;
-        vec2i dim(m_gridX-1, m_gridY-1);
+        vec2i dim(m_gridX, m_gridY);
         int nextIndex = index;
         const constexpr Real maxDelay = std::numeric_limits<Real>::max();
         Real delay = maxDelay;
