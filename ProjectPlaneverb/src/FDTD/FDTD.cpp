@@ -47,10 +47,10 @@ namespace Planeverb
 		}
 
 		// copy over values
-		out.occlusion = (float)result->occlusion;
-        out.wetGain = (float)result->wetGain;
-		out.lowpass = (float)result->lowpassIntensity;
-		out.rt60 = (float)result->rt60;
+		out.occlusion = (Real)result->occlusion;
+        out.wetGain = (Real)result->wetGain;
+		out.lowpass = (Real)result->lowpassIntensity;
+		out.rt60 = (Real)result->rt60;
 		out.direction = result->direction;
 		out.sourceDirectivity = result->sourceDirectivity;
 

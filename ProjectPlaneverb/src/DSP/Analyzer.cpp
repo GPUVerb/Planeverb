@@ -94,6 +94,7 @@ namespace Planeverb
 			INDEX_TO_POS(gridX, gridY, serialIndex, dim);
 			gridIndex.x = gridX;
 			gridIndex.y = gridY;
+
 			const Cell* response = m_grid->GetResponse(gridIndex);
 
             EncodeResponse(serialIndex, gridIndex, response, listenerPos, m_responseLength);
@@ -111,6 +112,7 @@ namespace Planeverb
             INDEX_TO_POS(gridX, gridY, i, dim);
             gridIndex.x = gridX;
             gridIndex.y = gridY;
+
 			const Cell* response = m_grid->GetResponse(gridIndex);
 
 			// analyze for listener direction
@@ -176,6 +178,14 @@ namespace Planeverb
         for (; onsetSample < numSamples; ++onsetSample)
         {
             Real next = response[onsetSample].pr;
+
+            //Debug
+            if (onsetSample == 9)
+            {
+                EDryValues[serialIndex] = (float)response[onsetSample].pr;
+                EFreeValues[serialIndex] = (float)onsetSample;
+            }
+
             if (std::abs(next) > PV_AUDIBLE_THRESHOLD_GAIN)
             {
                 break;
@@ -211,7 +221,7 @@ namespace Planeverb
             int j = 0;
             for (; j < sourceDirEnd; ++j)
             {
-                const auto& r = response[j];
+                const auto& r = response[j];    
                 Edry += r.pr * r.pr;
                 radiationDir.x += r.pr * r.vx;
                 radiationDir.y += r.pr * r.vy;
@@ -236,8 +246,8 @@ namespace Planeverb
             }
 
             //Debug
-            EDryValues[serialIndex] = (float)onsetSample;
-            EFreeValues[serialIndex] = (float)numSamples;
+            /*EDryValues[serialIndex] = (float)onsetSample;
+            EFreeValues[serialIndex] = (float)numSamples;*/
 
             Real E = (Edry / EfreePr);
             obstructionGain = std::sqrt(E);
@@ -257,7 +267,7 @@ namespace Planeverb
         //
 
         // get input distance driven by inverse of occlusion. If occlusion is very small, cap out at "lots of occlusion"
-        Real r = 1.0f / std::max(0.001f, obstructionGain);
+        Real r = 1.0 / std::max(0.001f, obstructionGain);
         // Find LPF cutoff frequency by feeding into equation: y = -147 + (18390) / (1 + (x / 12)^0.8 )
         m_results[serialIndex].lowpassIntensity = 
             (Real)-147.f + ((Real)18390.f) / ((Real)1.f + std::pow(r / (Real)12.f, (Real)0.8f));
@@ -271,7 +281,7 @@ namespace Planeverb
             const int end = std::min(directEnd + 1 + wetGainSamples, numSamples);
             for (int j = directEnd + 1; j < end; j++)
             {
-                const float p = response[j].pr;
+                const Real p = response[j].pr;
                 wetEnergy += p * p;
             }
         }

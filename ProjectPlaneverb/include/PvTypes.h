@@ -62,10 +62,10 @@ namespace Planeverb
 	// Final acoustic output for an emitter
 	struct PlaneverbOutput
 	{
-		float occlusion;
-        float wetGain;
-		float rt60;
-		float lowpass;
+		Real occlusion;
+		Real wetGain;
+		Real rt60;
+		Real lowpass;
 		vec2 direction;
 		vec2 sourceDirectivity;
 	};

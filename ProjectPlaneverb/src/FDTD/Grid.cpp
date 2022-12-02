@@ -9,14 +9,14 @@ namespace Planeverb
 	namespace
 	{
 		// Fill a given array with a precomputed Gaussian pulse
-		void GaussianPulse(const PlaneverbConfig* config, float samplingRate, Real* out, unsigned numSamples)
+		void GaussianPulse(const PlaneverbConfig* config, Real samplingRate, Real* out, unsigned numSamples)
 		{
-            const float maxFreq = Real(config->gridResolution);
-            const float pi = std::acos(-1);
-            float sigma = 1.0f / (0.5 * pi * maxFreq);
+            const Real maxFreq = Real(config->gridResolution);
+            const Real pi = std::acos(-1);
+			Real sigma = (Real)1.0f / (0.5 * pi * maxFreq);
 
-			const float delay = 2*sigma;
-            const float dt = 1.0f / samplingRate;
+			const Real delay = 2*sigma;
+            const Real dt = (Real)1.0f / samplingRate;
 
             for (unsigned i = 0; i < numSamples; ++i)
 			{
