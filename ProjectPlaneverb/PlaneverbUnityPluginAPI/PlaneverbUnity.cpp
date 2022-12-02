@@ -507,6 +507,24 @@ extern "C"
 			}
 		}
 	}
+
+	//Debug
+	PVU_EXPORT float PVU_CC
+	PlaneverbGetEdry(int gridId, unsigned serialIndex) {
+		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
+			auto const& m_analyzer = s_userAnalyzers[gridId];
+			return m_analyzer->GetEDry(serialIndex);
+		}
+	}
+
+	PVU_EXPORT float PVU_CC
+	PlaneverbGetEFree(int gridId, unsigned serialIndex) {
+		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
+			auto const& m_analyzer = s_userAnalyzers[gridId];
+			return m_analyzer->GetEFree(serialIndex);
+		}
+	}
+
 #pragma endregion
 
 }

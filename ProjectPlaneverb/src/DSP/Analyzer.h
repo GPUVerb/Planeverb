@@ -34,6 +34,10 @@ namespace Planeverb
 		unsigned GetGridX() { return m_gridX; }
 		unsigned GetGridY() { return m_gridY; }
 
+		//Debug
+		float GetEDry(unsigned index) { return EDryValues[index]; }
+		float GetEFree(unsigned index) { return EFreeValues[index]; }
+
 	private:
         void EncodeResponse(unsigned serialIndex, vec2i gridIndex, const Cell* response, const vec3& listenerPos, unsigned numSamples);
 		vec2 EncodeListenerDirection(unsigned index, const Cell* response, const vec3& listenerPos, unsigned numSamples);
@@ -49,6 +53,11 @@ namespace Planeverb
 		unsigned m_samplingRate;	// sampling rate for conversions (samples per second)
 		unsigned m_numThreads;		// number of threads the module is allowed to use
 		int m_resolution;			// grid resolution
+
+		//Debug
+
+		float* EDryValues;
+		float* EFreeValues;
 
 	};
 } // namespace Planeverb

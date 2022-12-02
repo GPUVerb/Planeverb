@@ -38,6 +38,11 @@ namespace Planeverb
 		// set grid ptrs into pool
 		m_results = reinterpret_cast<AnalyzerResult*>(m_mem);
 		m_delaySamples = reinterpret_cast<Real*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult));
+
+        //Debug
+        EDryValues = reinterpret_cast<float*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult) + (unsigned long long)m_gridX * (unsigned long long)m_gridY* sizeof(Real));
+        EFreeValues = reinterpret_cast<float*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult) + 
+            (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(Real) + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(float));
 	}
 	Analyzer::~Analyzer()
 	{
@@ -66,6 +71,16 @@ namespace Planeverb
 		Real maxVal = (Real)std::numeric_limits<Real>::max();
 		for (unsigned i = 0; i < gridSize; ++i)
 			*delayLooper++ = maxVal;
+
+        //Debug
+        float* temp_dry = EDryValues;
+        for (unsigned i = 0; i < gridSize; ++i)
+            *temp_dry++ = 0.0f;
+
+
+        float* temp_Free = EFreeValues;
+        for (unsigned i = 0; i < gridSize; ++i)
+            *temp_Free++ = 0.0f;
 
 		// each type of analysis can be done in parallel
 		// each index can be done in parallel
@@ -138,9 +153,14 @@ namespace Planeverb
 		unsigned m_gridY = (unsigned)m_gridSize.y;
 		
 		// find size for both grids, allocate pool of memory
-		unsigned size =
-			m_gridX * m_gridY * sizeof(AnalyzerResult) +
-			m_gridX * m_gridY * sizeof(Real);
+        unsigned size =
+            m_gridX * m_gridY * sizeof(AnalyzerResult) +
+            m_gridX * m_gridY * sizeof(Real);
+
+
+        //Debug
+        size += m_gridX * m_gridY * sizeof(float)
+                + m_gridX * m_gridY * sizeof(float);
 
 		return size;
 	}
@@ -214,6 +234,10 @@ namespace Planeverb
 
                 EfreePr = m_freeGrid->GetEFreePerR(listenerX, listenerY, emitterX, emitterY);
             }
+
+            //Debug
+            EDryValues[serialIndex] = (float)onsetSample;
+            EFreeValues[serialIndex] = (float)numSamples;
 
             Real E = (Edry / EfreePr);
             obstructionGain = std::sqrt(E);
