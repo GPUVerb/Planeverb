@@ -63,7 +63,12 @@ namespace Planeverb
 	void EmissionManager::EndEmission(EmissionID id)
 	{
 		// add to the open slots to be reused
-		m_openSlots.push_back(id);
+		int size = (int)m_emitterPositions.size();
+		if (id >= 0 && id < size)
+		{
+			m_emitterPositions[id] = vec3(0, 0, 0);
+			m_openSlots.push_back(id);
+		}
 	}
 
 	const vec3* EmissionManager::GetEmitter(EmissionID id) const

@@ -318,6 +318,7 @@ extern "C"
 	extern "C++" {
 		static Planeverb::PlaneverbConfig s_userConfig;
 
+		//Emission Manager should NOT be used
 		static std::vector<Planeverb::EmissionManager*> s_userEmissionManagers;
 		static std::vector<std::vector<char>> s_userEmiMem;
 
@@ -453,6 +454,46 @@ extern "C"
 			}
 
 			auto* result = m_analyzer->GetResponseResult(*emitterPos);
+
+			// case invalid emitter position
+			if (!result)
+			{
+				out.occlusion = -1.0;
+				return out;
+			}
+
+			// copy over values
+			out.occlusion = (float)result->occlusion;
+			out.wetGain = (float)result->wetGain;
+			out.lowpass = (float)result->lowpassIntensity;
+			out.rt60 = (float)result->rt60;
+			out.directionX = result->direction.x;
+			out.directionY = result->direction.y;
+			out.sourceDirectionX = result->sourceDirectivity.x;
+			out.sourceDirectionY = result->sourceDirectivity.y;
+		}
+		return out;
+	}
+
+	PVU_EXPORT PlaneverbOutput PVU_CC
+	PlaneverbGetOneOutputWithPosition(int gridId, float emitterX, float emitterY, float emitterZ)
+	{
+		PlaneverbOutput out;
+		std::memset(&out, 0, sizeof(out));
+		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
+			auto const& m_analyzer = s_userAnalyzers[gridId];
+
+
+			const Planeverb::vec3 emitterPos = Planeverb::vec3(emitterX, emitterY, emitterZ);
+
+			// case emitter is invalid
+			/*if (!emitterPos)
+			{
+				out.occlusion = -1.0;
+				return out;
+			}*/
+
+			auto* result = m_analyzer->GetResponseResult(emitterPos);
 
 			// case invalid emitter position
 			if (!result)
