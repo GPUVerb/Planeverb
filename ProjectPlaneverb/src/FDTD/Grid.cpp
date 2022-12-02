@@ -13,10 +13,10 @@ namespace Planeverb
 		{
             const Real maxFreq = Real(config->gridResolution);
             const Real pi = std::acos(-1);
-			Real sigma = (Real)1.0f / (0.5 * pi * maxFreq);
+			Real sigma = (Real)1.0 / (0.5 * pi * maxFreq);
 
 			const Real delay = 2*sigma;
-            const Real dt = (Real)1.0f / samplingRate;
+            const Real dt = (Real)1.0 / samplingRate;
 
             for (unsigned i = 0; i < numSamples; ++i)
 			{
@@ -45,8 +45,8 @@ namespace Planeverb
 
 		CalculateGridParameters(config->gridResolution, m_dx, m_dt, m_samplingRate);
 
-		m_gridSize.x = static_cast<unsigned>((1.f / m_dx) * m_gridDimensions.x + 1.0f);
-		m_gridSize.y = static_cast<unsigned>((1.f / m_dx) * m_gridDimensions.y + 1.0f);
+		m_gridSize.x = static_cast<unsigned>((1.0 / m_dx) * m_gridDimensions.x + 1.0);
+		m_gridSize.y = static_cast<unsigned>((1.0 / m_dx) * m_gridDimensions.y + 1.0);
 
 		// calculate total memory size
 		// length per grid uses gridsize + 1 for extended velocity fields
@@ -83,7 +83,7 @@ namespace Planeverb
 		// init the boundary layer
 		for (unsigned i = 0; i < incGridSize.x; ++i)
 			for (unsigned j = 0; j < incGridSize.y; ++j)
-				m_boundaries[INDEX(i, j, incGridSize)] = BoundaryInfo{ vec2((Real)0.f, (Real)0.f), PV_ABSORPTION_FREE_SPACE };
+				m_boundaries[INDEX(i, j, incGridSize)] = BoundaryInfo{ vec2((Real)0.0, (Real)0.0), PV_ABSORPTION_FREE_SPACE };
 
 		// init the b and by field
 		unsigned numBIterations = incGridSize.x * incGridSize.y;
@@ -137,10 +137,10 @@ namespace Planeverb
 	void Grid::AddAABB(const AABB * transform)
 	{
 		// define edges of the AABB
-		const unsigned startY = (unsigned)((transform->position.y - transform->height / (Real)2.f + m_gridOffset.x) * ((Real)1.f / m_dx));
-		const unsigned startX = (unsigned)((transform->position.x - transform->width  / (Real)2.f + m_gridOffset.y) * ((Real)1.f / m_dx));
-		const unsigned endY   = (unsigned)((transform->position.y + transform->height / (Real)2.f + m_gridOffset.x) * ((Real)1.f / m_dx));
-		const unsigned endX   = (unsigned)((transform->position.x + transform->width  / (Real)2.f + m_gridOffset.y) * ((Real)1.f / m_dx));
+		const unsigned startY = (unsigned)((transform->position.y - transform->height / (Real)2.0 + m_gridOffset.x) * ((Real)1.0 / m_dx));
+		const unsigned startX = (unsigned)((transform->position.x - transform->width  / (Real)2.0 + m_gridOffset.y) * ((Real)1.0 / m_dx));
+		const unsigned endY   = (unsigned)((transform->position.y + transform->height / (Real)2.0 + m_gridOffset.x) * ((Real)1.0 / m_dx));
+		const unsigned endX   = (unsigned)((transform->position.x + transform->width  / (Real)2.0 + m_gridOffset.y) * ((Real)1.0 / m_dx));
 		
 		const vec2i newGridSize(m_gridSize.x, m_gridSize.y);
 
@@ -250,10 +250,10 @@ namespace Planeverb
 	void Grid::RemoveAABB(const AABB * transform)
 	{
 		// define edges of the AABB
-		unsigned startY = (unsigned)((transform->position.y - transform->height / (Real)2.f + m_gridOffset.y) * ((Real)1.f / m_dx));
-		unsigned startX = (unsigned)((transform->position.x - transform->width  / (Real)2.f + m_gridOffset.x) * ((Real)1.f / m_dx));
-		unsigned endY   = (unsigned)((transform->position.y + transform->height / (Real)2.f + m_gridOffset.y) * ((Real)1.f / m_dx));
-		unsigned endX   = (unsigned)((transform->position.x + transform->width  / (Real)2.f + m_gridOffset.x) * ((Real)1.f / m_dx));
+		unsigned startY = (unsigned)((transform->position.y - transform->height / (Real)2.0 + m_gridOffset.y) * ((Real)1.0 / m_dx));
+		unsigned startX = (unsigned)((transform->position.x - transform->width  / (Real)2.0 + m_gridOffset.x) * ((Real)1.0 / m_dx));
+		unsigned endY   = (unsigned)((transform->position.y + transform->height / (Real)2.0 + m_gridOffset.y) * ((Real)1.0 / m_dx));
+		unsigned endX   = (unsigned)((transform->position.x + transform->width  / (Real)2.0 + m_gridOffset.x) * ((Real)1.0 / m_dx));
 
 		vec2i newGridSize(m_gridSize.x, m_gridSize.y );
 
@@ -323,7 +323,7 @@ namespace Planeverb
 				}
 				else
 				{
-					if (m_boundaries[index].normal.x != 0.f)
+					if (m_boundaries[index].normal.x != 0.0)
 					{
 						if (m_boundaries[index].normal.x > 0)
 							std::cout << "x>";
@@ -367,8 +367,8 @@ namespace Planeverb
 		CalculateGridParameters(config->gridResolution, m_dx, m_dt, m_samplingRate);
 
 		vec2i m_gridSize;
-		m_gridSize.x = (unsigned)((1.f / m_dx) * config->gridSizeInMeters.x + 1);
-		m_gridSize.y = (unsigned)((1.f / m_dx) * config->gridSizeInMeters.y + 1);
+		m_gridSize.x = (unsigned)((1.0 / m_dx) * config->gridSizeInMeters.x + 1);
+		m_gridSize.y = (unsigned)((1.0 / m_dx) * config->gridSizeInMeters.y + 1);
 
 		// calculate total memory size
 		// length per grid uses gridsize + 1 for extended velocity fields

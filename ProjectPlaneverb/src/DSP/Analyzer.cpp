@@ -40,9 +40,9 @@ namespace Planeverb
 		m_delaySamples = reinterpret_cast<Real*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult));
 
         //Debug
-        EDryValues = reinterpret_cast<float*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult) + (unsigned long long)m_gridX * (unsigned long long)m_gridY* sizeof(Real));
-        EFreeValues = reinterpret_cast<float*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult) + 
-            (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(Real) + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(float));
+        EDryValues = reinterpret_cast<Real*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult) + (unsigned long long)m_gridX * (unsigned long long)m_gridY* sizeof(Real));
+        EFreeValues = reinterpret_cast<Real*>(m_mem + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(AnalyzerResult) +
+            (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(Real) + (unsigned long long)m_gridX * (unsigned long long)m_gridY * sizeof(Real));
 	}
 	Analyzer::~Analyzer()
 	{
@@ -73,14 +73,14 @@ namespace Planeverb
 			*delayLooper++ = maxVal;
 
         //Debug
-        float* temp_dry = EDryValues;
+        Real* temp_dry = EDryValues;
         for (unsigned i = 0; i < gridSize; ++i)
-            *temp_dry++ = 0.0f;
+            *temp_dry++ = 0.0;
 
 
-        float* temp_Free = EFreeValues;
+        Real* temp_Free = EFreeValues;
         for (unsigned i = 0; i < gridSize; ++i)
-            *temp_Free++ = 0.0f;
+            *temp_Free++ = 0.0;
 
 		// each type of analysis can be done in parallel
 		// each index can be done in parallel
@@ -148,8 +148,8 @@ namespace Planeverb
 		CalculateGridParameters(config->gridResolution, m_dx, m_dt, samplingRate);
 		
 		vec2i m_gridSize;
-        m_gridSize.x = (unsigned)((1.f / m_dx) * config->gridSizeInMeters.x + 1);
-        m_gridSize.y = (unsigned)((1.f / m_dx) * config->gridSizeInMeters.y + 1);
+        m_gridSize.x = (unsigned)((1.0 / m_dx) * config->gridSizeInMeters.x + 1);
+        m_gridSize.y = (unsigned)((1.0 / m_dx) * config->gridSizeInMeters.y + 1);
 
 		unsigned m_gridX = (unsigned)m_gridSize.x;
 		unsigned m_gridY = (unsigned)m_gridSize.y;
@@ -161,8 +161,8 @@ namespace Planeverb
 
 
         //Debug
-        size += m_gridX * m_gridY * sizeof(float)
-                + m_gridX * m_gridY * sizeof(float);
+        size += m_gridX * m_gridY * sizeof(Real)
+                + m_gridX * m_gridY * sizeof(Real);
 
 		return size;
 	}
@@ -182,8 +182,8 @@ namespace Planeverb
             //Debug
             if (onsetSample == 9)
             {
-                EDryValues[serialIndex] = (float)response[onsetSample].pr;
-                EFreeValues[serialIndex] = (float)onsetSample;
+                EDryValues[serialIndex] = (Real)response[onsetSample].pr;
+                EFreeValues[serialIndex] = (Real)onsetSample;
             }
 
             if (std::abs(next) > PV_AUDIBLE_THRESHOLD_GAIN)
@@ -235,10 +235,10 @@ namespace Planeverb
 
             // Normalize dry energy by free-space energy to obtain geometry-based 
             // obstruction gain with distance attenuation factored out
-            Real EfreePr = 0.0f;
+            Real EfreePr = 0.0;
             {
-                const int listenerX = (int)(listenerPos.x * (1.f / m_dx));
-                const int listenerY = (int)(listenerPos.z * (1.f / m_dx));
+                const int listenerX = (int)(listenerPos.x * (1.0 / m_dx));
+                const int listenerY = (int)(listenerPos.z * (1.0 / m_dx));
                 const int emitterX = gridIndex.x;
                 const int emitterY = gridIndex.y;
 
@@ -246,15 +246,15 @@ namespace Planeverb
             }
 
             //Debug
-            /*EDryValues[serialIndex] = (float)onsetSample;
-            EFreeValues[serialIndex] = (float)numSamples;*/
+            /*EDryValues[serialIndex] = (Real)onsetSample;
+            EFreeValues[serialIndex] = (Real)numSamples;*/
 
             Real E = (Edry / EfreePr);
             obstructionGain = std::sqrt(E);
 
             // Normalize and negate flux direction to obtain radiated unit vector
             auto norm = std::sqrt(radiationDir.x*radiationDir.x + radiationDir.y*radiationDir.y);
-            norm = -1.0f / (norm > 0.0f ? norm : 1.0f);
+            norm = -1.0 / (norm > 0.0 ? norm : 1.0);
             radiationDir.x = norm * radiationDir.x;
             radiationDir.y = norm * radiationDir.y;
         }
@@ -267,15 +267,15 @@ namespace Planeverb
         //
 
         // get input distance driven by inverse of occlusion. If occlusion is very small, cap out at "lots of occlusion"
-        Real r = 1.0 / std::max(0.001f, obstructionGain);
+        Real r = 1.0 / std::max(0.001, obstructionGain);
         // Find LPF cutoff frequency by feeding into equation: y = -147 + (18390) / (1 + (x / 12)^0.8 )
         m_results[serialIndex].lowpassIntensity = 
-            (Real)-147.f + ((Real)18390.f) / ((Real)1.f + std::pow(r / (Real)12.f, (Real)0.8f));
+            (Real)-147.0 + ((Real)18390.0) / ((Real)1.0 + std::pow(r / (Real)12.0, (Real)0.8));
 
         //
         // Wet gain
         //
-        Real wetEnergy = 0.0f;
+        Real wetEnergy = 0.0;
         {
             const int wetGainSamples = (int)(PV_WET_GAIN_ANALYSIS_LENGTH * (Real)m_samplingRate);
             const int end = std::min(directEnd + 1 + wetGainSamples, numSamples);
@@ -330,15 +330,15 @@ namespace Planeverb
 
             // We regress assuming time-step is 1 and startingPoint is x=0.
             // The latter offset does not change slope, and time-step adjustment is done at end.
-            Real xmean = (rn - 1.0f) * 0.5f;
+            Real xmean = (rn - 1.0) * 0.5;
             Real xsum = rn * xmean;
             
             // Sum[(x-xmean)^2] = Sum[(i - ((n - 1)/2))^2, {i, 0, n - 1}] = 1/12 n (-1 + n^2)
-            Real denominator = (1.0f / 12.0f) * rn * (rn*rn - 1.0f);
+            Real denominator = (1.0 / 12.0) * rn * (rn*rn - 1.0);
 
             // Backward energy integral
-            Real energyDecayCurve = 0.f;
-            Real energyDecayCurveDB = 0.f;
+            Real energyDecayCurve = 0.0;
+            Real energyDecayCurveDB = 0.0;
             Real xysum = 0;
             Real ysum = 0;
 
@@ -353,7 +353,7 @@ namespace Planeverb
             {
                 auto p = response[i].pr;
                 energyDecayCurve += p * p;
-                energyDecayCurveDB = 10.f * std::log10(energyDecayCurve);
+                energyDecayCurveDB = 10.0 * std::log10(energyDecayCurve);
 
                 Real y_i = energyDecayCurveDB;
                 auto x_i = (i - startingPoint);
@@ -366,7 +366,7 @@ namespace Planeverb
             
             Real slopeDBperSample = numerator / denominator;
             Real slopeDBperSec = slopeDBperSample * m_samplingRate;
-            m_results[serialIndex].rt60 = -60.f / slopeDBperSec;
+            m_results[serialIndex].rt60 = -60.0 / slopeDBperSec;
         }
     }
 
@@ -390,7 +390,7 @@ namespace Planeverb
         Real nextDelay = maxDelay;
         Real samplingRate = (Real)m_samplingRate;
         Real wavelength = PV_C / (Real)m_resolution;
-        const Real threshold = (Real)0.3f;
+        const Real threshold = (Real)0.3;
         Real thresholdDist = threshold * wavelength;
 
         // loop while not close to the listener
@@ -398,7 +398,7 @@ namespace Planeverb
         {
             int r, c;
             INDEX_TO_POS(r, c, nextIndex, dim);
-            Real nextLoudness = 0.f;
+            Real nextLoudness = 0.0;
             Real nextDelay = maxDelay;
 
             // for each neighbor find the neighbor with the smallest delay time
@@ -412,9 +412,9 @@ namespace Planeverb
                 int newPosIndex = INDEX(nr, nc, dim);
                 auto& result = m_results[newPosIndex];
                 Real delay = m_delaySamples[newPosIndex];
-                if ((unsigned)delay == numSamples || result.occlusion == 0.f)
+                if ((unsigned)delay == numSamples || result.occlusion == 0.0)
                     continue;
-                else if (delay < nextDelay && result.occlusion > 0.f)
+                else if (delay < nextDelay && result.occlusion > 0.0)
                 {
                     nextLoudness = result.occlusion;
                     nextIndex = newPosIndex;
@@ -463,7 +463,7 @@ namespace Planeverb
         // find vector between and normalize
         vec2 output(ex - listenerPos.x, ey - listenerPos.z);
         Real length = (output.x * output.x) + (output.y * output.y);
-        if (length != 0.f)
+        if (length != 0.0)
         {
             length = std::sqrt(length);
             output.x /= length;

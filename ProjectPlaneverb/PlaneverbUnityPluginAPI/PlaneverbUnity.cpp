@@ -34,7 +34,7 @@ extern "C"
 
 #pragma region Export Functions
 	PVU_EXPORT void PVU_CC
-	PlaneverbInit(float gridSizeX, float gridSizeY,
+	PlaneverbInit(Real gridSizeX, Real gridSizeY,
 		int gridResolution, int gridBoundaryType, char* tempFileDir, 
 		int maxThreadUsage, int threadExecutionType)
 	{
@@ -57,13 +57,13 @@ extern "C"
 	}
 
 	PVU_EXPORT int PVU_CC
-	PlaneverbEmit(float x, float y, float z)
+	PlaneverbEmit(Real x, Real y, Real z)
 	{
 		return (int)Planeverb::Emit(Planeverb::vec3(x, y, z));
 	}
 
 	PVU_EXPORT void PVU_CC
-	PlaneverbUpdateEmission(int id, float x, float y, float z)
+	PlaneverbUpdateEmission(int id, Real x, Real y, Real z)
 	{
 		Planeverb::UpdateEmission((Planeverb::EmissionID)id, Planeverb::vec3(x, y, z));
 	}
@@ -76,14 +76,14 @@ extern "C"
 
 	struct PlaneverbOutput
 	{
-		float occlusion;
-		float wetGain;
-		float rt60;
-		float lowpass;
-		float directionX;
-		float directionY;
-		float sourceDirectionX;
-		float sourceDirectionY;
+		Real occlusion;
+		Real wetGain;
+		Real rt60;
+		Real lowpass;
+		Real directionX;
+		Real directionY;
+		Real sourceDirectionX;
+		Real sourceDirectionY;
 	};
 
 	PVU_EXPORT PlaneverbOutput PVU_CC
@@ -103,9 +103,9 @@ extern "C"
 	}
 
 	PVU_EXPORT int PVU_CC
-	PlaneverbAddGeometry(float posX, float posY,
-		float width, float height, 
-		float absorption)
+	PlaneverbAddGeometry(Real posX, Real posY,
+		Real width, Real height, 
+		Real absorption)
 	{
 		Planeverb::AABB aabb;
 		aabb.position.x = posX;
@@ -119,9 +119,9 @@ extern "C"
 
 	PVU_EXPORT void PVU_CC
 	PlaneverbUpdateGeometry(int id,
-		float posX, float posY,
-		float width, float height,
-		float absorption)
+		Real posX, Real posY,
+		Real width, Real height,
+		Real absorption)
 	{
 		Planeverb::AABB aabb;
 		aabb.position.x = posX;
@@ -140,7 +140,7 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-	PlaneverbSetListenerPosition(float x, float y, float z)
+	PlaneverbSetListenerPosition(Real x, Real y, Real z)
 	{
 		Planeverb::SetListenerPosition(Planeverb::vec3(x, y, z));
 	}
@@ -154,7 +154,7 @@ extern "C"
 	}
 
 	PVU_EXPORT int PVU_CC
-	PlaneverbGetResponsePressure(int gridId, float x, float z, float out[]) {
+	PlaneverbGetResponsePressure(int gridId, Real x, Real z, Real out[]) {
 		auto*      context = Planeverb::GetContext();
 		const auto grid = [&]() {
 			if(gridId == -1) {
@@ -182,7 +182,7 @@ extern "C"
 
 
 	PVU_EXPORT int PVU_CC
-    PlaneverbCreateGrid(float sizeX, float sizeY, int gridResolution) {
+    PlaneverbCreateGrid(Real sizeX, Real sizeY, int gridResolution) {
 		Planeverb::PlaneverbConfig config { };
 		config.gridSizeInMeters = Planeverb::vec2{ sizeX, sizeY };
 		config.gridResolution = gridResolution;
@@ -238,7 +238,7 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-	PlaneverbGenerateGridResponse(int gridId, float listenerX, float listenerZ) {
+	PlaneverbGenerateGridResponse(int gridId, Real listenerX, Real listenerZ) {
 		if (gridId >= 0 && gridId < s_userGrids.size() && s_userGrids[gridId]) {
 			auto const& grid = s_userGrids[gridId];
 			grid->GenerateResponse(Planeverb::vec3{ listenerX, 0, listenerZ });
@@ -246,7 +246,7 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-	PlaneverbGetGridResponse(int gridId, float listenerX, float listenerZ, Planeverb::Cell out[]) {
+	PlaneverbGetGridResponse(int gridId, Real listenerX, Real listenerZ, Planeverb::Cell out[]) {
 		if (gridId >= 0 && gridId < s_userGrids.size() && s_userGrids[gridId]) {
 
 			auto const& grid = s_userGrids[gridId];
@@ -329,7 +329,7 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-	PlaneverbCreateConfig(float sizeX, float sizeY, int gridResolution) {
+	PlaneverbCreateConfig(Real sizeX, Real sizeY, int gridResolution) {
 		s_userConfig.gridSizeInMeters = Planeverb::vec2{ sizeX, sizeY };
 		s_userConfig.gridResolution = gridResolution;
 		s_userConfig.tempFileDirectory = ".";
@@ -426,7 +426,7 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-	PlaneverbAnalyzeResponses(int gridId, float listenerX, float listenerZ) {
+	PlaneverbAnalyzeResponses(int gridId, Real listenerX, Real listenerZ) {
 		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
 			auto const& m_analyzer = s_userAnalyzers[gridId];
 			m_analyzer->AnalyzeResponses(Planeverb::vec3{ listenerX, 0, listenerZ });
@@ -462,10 +462,10 @@ extern "C"
 			}
 
 			// copy over values
-			out.occlusion = (float)result->occlusion;
-			out.wetGain = (float)result->wetGain;
-			out.lowpass = (float)result->lowpassIntensity;
-			out.rt60 = (float)result->rt60;
+			out.occlusion = (Real)result->occlusion;
+			out.wetGain = (Real)result->wetGain;
+			out.lowpass = (Real)result->lowpassIntensity;
+			out.rt60 = (Real)result->rt60;
 			out.directionX = result->direction.x;
 			out.directionY = result->direction.y;
 			out.sourceDirectionX = result->sourceDirectivity.x;
@@ -475,7 +475,7 @@ extern "C"
 	}
 
 	PVU_EXPORT void PVU_CC
-	PlaneverbGetOneAnalyzerResponse(int gridId, float emitterX, float emitterY, float emitterZ, Planeverb::AnalyzerResult* out) {
+	PlaneverbGetOneAnalyzerResponse(int gridId, Real emitterX, Real emitterY, Real emitterZ, Planeverb::AnalyzerResult* out) {
 		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
 			auto const& m_analyzer = s_userAnalyzers[gridId];
 			*out = *m_analyzer->GetResponseResult(Planeverb::vec3(emitterX, emitterY, emitterZ));
@@ -502,14 +502,14 @@ extern "C"
 
 			for (unsigned x = 0; x < xSize; ++x) {
 				for (unsigned y = 0; y < ySize; ++y) {
-					out[x * ySize + y] = *m_analyzer->GetResponseByIndex(x * ySize + y); //*m_analyzer->GetResponseResult(Planeverb::vec3{ static_cast<float>(x),0,static_cast<float>(y) });
+					out[x * ySize + y] = *m_analyzer->GetResponseByIndex(x * ySize + y); //*m_analyzer->GetResponseResult(Planeverb::vec3{ static_cast<Real>(x),0,static_cast<Real>(y) });
 				} 
 			}
 		}
 	}
 
 	//Debug
-	PVU_EXPORT float PVU_CC
+	PVU_EXPORT Real PVU_CC
 	PlaneverbGetEdry(int gridId, unsigned serialIndex) {
 		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
 			auto const& m_analyzer = s_userAnalyzers[gridId];
@@ -517,7 +517,7 @@ extern "C"
 		}
 	}
 
-	PVU_EXPORT float PVU_CC
+	PVU_EXPORT Real PVU_CC
 	PlaneverbGetEFree(int gridId, unsigned serialIndex) {
 		if (gridId >= 0 && gridId < s_userAnalyzers.size() && s_userAnalyzers[gridId]) {
 			auto const& m_analyzer = s_userAnalyzers[gridId];

@@ -35,8 +35,8 @@ namespace Planeverb
 		unsigned GetGridY() { return m_gridY; }
 
 		//Debug
-		float GetEDry(unsigned index) { return EDryValues[index]; }
-		float GetEFree(unsigned index) { return EFreeValues[index]; }
+		Real GetEDry(unsigned index) { return EDryValues[index]; }
+		Real GetEFree(unsigned index) { return EFreeValues[index]; }
 
 	private:
         void EncodeResponse(unsigned serialIndex, vec2i gridIndex, const Cell* response, const vec3& listenerPos, unsigned numSamples);
@@ -56,8 +56,8 @@ namespace Planeverb
 
 		//Debug
 
-		float* EDryValues;
-		float* EFreeValues;
+		Real* EDryValues;
+		Real* EFreeValues;
 
 	};
 } // namespace Planeverb

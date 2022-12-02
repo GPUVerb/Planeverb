@@ -38,7 +38,7 @@ namespace Planeverb
 	struct PlaneverbConfig
 	{
 		// grid size in meters
-		vec2 gridSizeInMeters = {10.f, 10.f};
+		vec2 gridSizeInMeters = {10.0, 10.0};
 
 		// max frequency represented by the FDTD grid
 		// simplified into different resolution bins
@@ -56,7 +56,7 @@ namespace Planeverb
 		PlaneverbExecutionType threadExecutionType = pv_CPU; // CPU or GPU
 
 		// grid world offset - !!! Not supported !!!
-		vec2 gridWorldOffset = { 0.f, 0.f };
+		vec2 gridWorldOffset = { 0.0, 0.0 };
 	};
 
 	// Final acoustic output for an emitter
@@ -77,27 +77,27 @@ namespace Planeverb
 	// Planeverb external constants
 	const constexpr PlaneObjectID PV_INVALID_PLANE_OBJECT_ID = (PlaneObjectID)(-1);
 	const constexpr EmissionID PV_INVALID_EMISSION_ID = (EmissionID)(-1);
-	const constexpr Real PV_INVALID_DRY_GAIN = (Real)-1.f;
+	const constexpr Real PV_INVALID_DRY_GAIN = (Real)-1.0;
 
 	// Internal constants
-	const constexpr Real PV_PI = (Real)3.141593f;						// PI
-	const constexpr Real PV_RHO = (Real)1.2041f;						// air density
-	const constexpr Real PV_C = (Real)343.21f;							// speed of sound
+	const constexpr Real PV_PI = (Real)3.1415930;						// PI
+	const constexpr Real PV_RHO = (Real)1.20410;						// air density
+	const constexpr Real PV_C = (Real)343.210;							// speed of sound
 	const constexpr Real PV_Z_AIR = PV_RHO * PV_C;						// natural impedance of air
-	const constexpr Real PV_INV_Z_AIR = (Real)1.f / PV_Z_AIR;			// inverse impedance for absorbing boundaries
-	const constexpr Real PV_INV_Z_REFLECT = (Real)0.0f;					// inverse impedance for reflecting boundaries
-	const constexpr Real PV_AUDIBLE_THRESHOLD_GAIN = (Real)0.00000316f;	// precalculated -110 dB converted to linear gain
-    const constexpr Real PV_DRY_DIRECTION_ANALYSIS_LENGTH = (Real)0.005f;// length of time flux of first wavefront (source direction)
-    const constexpr Real PV_DRY_GAIN_ANALYSIS_LENGTH = (Real)0.01f;		// length of time to process the initial pulse for occlusion
-	const constexpr Real PV_WET_GAIN_ANALYSIS_LENGTH = (Real)0.080f;	// length of time to process early reflections
-	const constexpr Real PV_SQRT_2 = (Real)1.4142136f;					// precalculated sqrt(2)
-	const constexpr Real PV_SQRT_3 = (Real)1.7320508f;					// precalculated sqrt(3)
-	const constexpr Real PV_MAX_AUDIBLE_FREQ = (Real)20000.f;			// maximum audible frequency for humans
-	const constexpr Real PV_MIN_AUDIBLE_FREQ = (Real)20.f;				// minimum audible frequency for humans
-	const constexpr Real PV_POINTS_PER_WAVELENGTH = (Real)3.5f;			// number of cells per wavelength
-	const constexpr Real PV_SCHROEDER_OFFSET_S = (Real)0.01f;			// experimentally calculated amount to cut off schroeder tail
-	const constexpr Real PV_DISTANCE_GAIN_THRESHOLD = (Real)0.891251f;	// -1dB converted to linear gain
-	const constexpr Real PV_DELAY_CLOSE_THRESHOLD = (Real)5.f;			// "close enough" delay threshold when analyzing for direction
+	const constexpr Real PV_INV_Z_AIR = (Real)1.0 / PV_Z_AIR;			// inverse impedance for absorbing boundaries
+	const constexpr Real PV_INV_Z_REFLECT = (Real)0.00;					// inverse impedance for reflecting boundaries
+	const constexpr Real PV_AUDIBLE_THRESHOLD_GAIN = (Real)0.000003160;	// precalculated -110 dB converted to linear gain
+    const constexpr Real PV_DRY_DIRECTION_ANALYSIS_LENGTH = (Real)0.0050;// length of time flux of first wavefront (source direction)
+    const constexpr Real PV_DRY_GAIN_ANALYSIS_LENGTH = (Real)0.010;		// length of time to process the initial pulse for occlusion
+	const constexpr Real PV_WET_GAIN_ANALYSIS_LENGTH = (Real)0.0800;	// length of time to process early reflections
+	const constexpr Real PV_SQRT_2 = (Real)1.41421360;					// precalculated sqrt(2)
+	const constexpr Real PV_SQRT_3 = (Real)1.73205080;					// precalculated sqrt(3)
+	const constexpr Real PV_MAX_AUDIBLE_FREQ = (Real)20000.0;			// maximum audible frequency for humans
+	const constexpr Real PV_MIN_AUDIBLE_FREQ = (Real)20.0;				// minimum audible frequency for humans
+	const constexpr Real PV_POINTS_PER_WAVELENGTH = (Real)3.50;			// number of cells per wavelength
+	const constexpr Real PV_SCHROEDER_OFFSET_S = (Real)0.010;			// experimentally calculated amount to cut off schroeder tail
+	const constexpr Real PV_DISTANCE_GAIN_THRESHOLD = (Real)0.8912510;	// -1dB converted to linear gain
+	const constexpr Real PV_DELAY_CLOSE_THRESHOLD = (Real)5.0;			// "close enough" delay threshold when analyzing for direction
 	const constexpr Real PV_IMPULSE_RESPONSE_S = PV_SQRT_2 * Real(12.5) / PV_C + Real(0.25);			// number of seconds to collect per impulse response
 	//                                                             ^ should be half of the scene width
 
@@ -111,7 +111,7 @@ namespace Planeverb
 		short b;	// B field packed into 2 2 byte fields
 		short by;	// B field packed into 2 2 byte fields
 
-		Cell(Real _pr = 0.f, Real _vx = 0.f, Real _vy = 0.f, int boundaryCoef = 1, int _by = 1) :
+		Cell(Real _pr = 0.0, Real _vx = 0.0, Real _vy = 0.0, int boundaryCoef = 1, int _by = 1) :
 			pr(_pr),
 			vx(_vx),
 			vy(_vy),

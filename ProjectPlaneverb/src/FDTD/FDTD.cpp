@@ -110,9 +110,9 @@ namespace Planeverb
             const unsigned N = loopSize;
 			for (unsigned i = 0; i < N; ++i, ++resetPtr)
 			{
-				resetPtr->pr = 0.f;
-				resetPtr->vx = 0.f;
-				resetPtr->vy = 0.f;
+				resetPtr->pr = 0.0;
+				resetPtr->vx = 0.0;
+				resetPtr->vy = 0.0;
 			}
 		}
 
@@ -148,14 +148,14 @@ namespace Planeverb
 					const Cell& prevCell = m_grid[in];
 					Real beta_n = (Real)prevCell.b;
 					Real Rn = m_boundaries[in].absorption; 
-					Real Yn = (1.f - Rn) / (1.f + Rn);
+					Real Yn = (1.0 - Rn) / (1.0 + Rn);
 
 					// [i, j]
 					Cell& thisCell = m_grid[i];											
 					int B = (int)thisCell.b;
 					Real beta = (Real)B;
 					Real R = m_boundaries[i].absorption;
-					Real Y = (1.f - R) / (1.f + R);
+					Real Y = (1.0 - R) / (1.0 + R);
 
 					const Real gradient_x = (thisCell.pr - prevCell.pr);
 					const Real airCellUpdate = thisCell.vx - Courant * gradient_x;
@@ -177,14 +177,14 @@ namespace Planeverb
 					const Cell& prevCell = m_grid[in];
 					Real beta_n = (Real)prevCell.b;
 					Real Rn = m_boundaries[in].absorption;
-					Real Yn = (1.f - Rn) / (1.f + Rn);
+					Real Yn = (1.0 - Rn) / (1.0 + Rn);
 
 					// [i, j]
 					Cell& thisCell = m_grid[i];											
 					int B = thisCell.b;
 					Real beta = (Real)B;
 					Real R = m_boundaries[i].absorption;
-					Real Y = (1.f - R) / (1.f + R);
+					Real Y = (1.0 - R) / (1.0 + R);
 	
 					const Real gradient_y = (thisCell.pr - prevCell.pr);
 					const Real airCellUpdate = thisCell.vy - Courant * gradient_y;

@@ -1,7 +1,7 @@
 #pragma once
 
 // Enable different bit-depth for floating point numbers
-#define Real float
+#define Real double
 
 namespace Planeverb
 {
@@ -9,7 +9,7 @@ namespace Planeverb
 	{
 		Real x, y, z;
 
-		vec3(Real _x = 0.f, Real _y = 0.f, Real _z = 0.f) : x(_x), y(_y), z(_z) {}
+		vec3(Real _x = 0.0, Real _y = 0.0, Real _z = 0.0) : x(_x), y(_y), z(_z) {}
 		vec3& operator=(const vec3&) = default;
 		vec3(const vec3& rhs) = default;
 		~vec3() = default;
@@ -22,7 +22,7 @@ namespace Planeverb
 			struct{	Real x, y; };
 			Real m[2];
 		};
-		vec2(Real _x = 0.f, Real _y = 0.f) : x(_x), y(_y) {}
+		vec2(Real _x = 0.0, Real _y = 0.0) : x(_x), y(_y) {}
 		vec2& operator=(const vec2&) = default;
 		vec2(const vec2& rhs) = default;
 		~vec2() = default;
